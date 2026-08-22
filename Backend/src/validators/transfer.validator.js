@@ -1,8 +1,9 @@
 const {z} = require("zod");
 
 const transferSchema = z.object({
-    amount : z.number().positive(),
-    recieverId : z.string().min(1)
+    fromAccountId : z.number().int().positive(),
+    toAccountId : z.number().int().positive(),
+    amount : z.number().positive()
 });
 
 module.exports = {
