@@ -1,4 +1,4 @@
-getAccountForUpdate = async(client , accountId) {
+getAccountForUpdate = async(client , accountId) => {
     const result = await client.query(
         `SELECT * FROM accounts 
         WHERE id = $1

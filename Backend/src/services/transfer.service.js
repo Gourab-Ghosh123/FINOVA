@@ -1,40 +1,52 @@
 const pool = require("../config/database");
-const {getAccountForUpdate} = require("../repository/transfer.repository");
+const {lockAccountInOrder} = require("../repository/transfer.repository");
+const AppError = require("../errors/AppError");
 
 const transferMoney = async(fromAccountId , toAccountId , amount) => {
 
     if(fromAccountId === toAccountId) {
-        throw new Error("source and destinaition account must be different");
+        throw new AppError("source and destinaition account must be different!" , 400);
+    }
+
+    if(!Number.isFinite(amount) || amount <= 0) {
+        throw new AppError("Amount must be greater than zero" , 400);
+    }
+
+    if(!Number.isInteger(amount * 100)) {
+        throw new AppError("Amount can have at  most 2 decimal places" , 400);
     }
 
     const amountPaise = Math.round(amount * 100);
 
-    if(amountPaise <= 0) {
-        throw new Error("Amount must be greater than zero");
-    }
     const client =  await pool.connect();
 
     try {
         await client.query("BEGIN");
 
-        const fromAccount = await getAccountForUpdate(client , fromAccountId);
+        const {firstAccount , secondAccount} = await lockAccountInOrder(
+            client , fromAccountId , toAccountId
+        );
 
-        const toAccount = await getAccountForUpdate(client , toAccountId);
 
-
-        if(!fromAccount) {
-            throw new Error("source account not found");
+        if(!firstAccount || !secondAccount) {
+            throw new AppError("one or both accounts not found" , 404);
         }
-        if(!toAccount) {
-            throw new Error("destination account not found");
+
+        if(fromAccountId == firstAccount.id) {
+            const fromAccount = firstAccount;
+            const toAccount = secondAccount;
+        }
+        else{
+            const fromAccount = secondAccount;
+            const toAccount = firstAccount;
         }
 
         if(fromAccount.balance_paise <= amountPaise) {
-            throw new Error("Insufficient Balance");
+            throw new AppError("Insufficient Balance" , 400);
         }
 
         await client.query(
-            `UpDATE accounts
+            `UPDATE accounts
             SET balance_paise = balance_paise - $1
             WHERE id = $2`,
             [amountPaise , fromAccount]

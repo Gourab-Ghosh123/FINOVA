@@ -7,7 +7,7 @@ const getAccountByUserId = async(userId) => {
         return null;
     }
     return account;
-}
+};
 
 module.exports = {
     getAccountByUserId
