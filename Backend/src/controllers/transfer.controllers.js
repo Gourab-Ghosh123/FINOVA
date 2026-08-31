@@ -1,5 +1,5 @@
 const {transferMoney} = require("../services/transfer.service");
-const createTranfer = async(req , res , next) => {
+const createTransfer = async(req , res , next) => {
     try {
         const {fromAccountId , toAccountId , amount} = req.body;
     const result = await transferMoney(fromAccountId , toAccountId , amount);
@@ -15,5 +15,5 @@ const createTranfer = async(req , res , next) => {
 }
 
 module.exports = {
-    createTranfer
+    createTransfer
 };

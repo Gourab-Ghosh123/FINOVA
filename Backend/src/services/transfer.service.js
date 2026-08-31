@@ -32,16 +32,11 @@ const transferMoney = async(fromAccountId , toAccountId , amount) => {
             throw new AppError("one or both accounts not found" , 404);
         }
 
-        if(fromAccountId == firstAccount.id) {
-            const fromAccount = firstAccount;
-            const toAccount = secondAccount;
-        }
-        else{
-            const fromAccount = secondAccount;
-            const toAccount = firstAccount;
-        }
 
-        if(fromAccount.balance_paise <= amountPaise) {
+        const fromAccount = fromAccountId === firstAccount.id ? firstAccount : secondAccount;
+        const toAccount = toAccountId === firstAccount.id ? firstAccount : secondAccount;
+
+        if(fromAccount.balance_paise < amountPaise) {
             throw new AppError("Insufficient Balance" , 400);
         }
 
@@ -49,13 +44,13 @@ const transferMoney = async(fromAccountId , toAccountId , amount) => {
             `UPDATE accounts
             SET balance_paise = balance_paise - $1
             WHERE id = $2`,
-            [amountPaise , fromAccount]
+            [amountPaise , fromAccount.id]
         );
         await client.query(
-            `UPDATE account 
-            SET balance_paise = balance + $1
+            `UPDATE accounts 
+            SET balance_paise = balance_paise + $1
             WHERE id = $2`,
-            [amountPaise , toAccount]
+            [amountPaise , toAccount.id]
         );
 
         const reference = `TXN_${Date.now()}_${Math.random().toString(36).slice(2 , 8)}`;
@@ -80,14 +75,14 @@ const transferMoney = async(fromAccountId , toAccountId , amount) => {
         await client.query(
             `
                 INSERT INTO ledger_entries(
-                    tracsactionId,
-                    accountId,
+                    transaction_id,
+                    account_id,
                     entry_type,
                     amount_paise
                 )
-                VALUES($1 , $2  $3 , $4)
+                VALUES($1 , $2 , $3 , $4)
             `,
-            [transactionId , toAccountId , "CREDIT" , amountPaise]
+            [transactionId , fromAccount.id , "CREDIT" , amountPaise]
         );
         await client.query(
             `
@@ -99,7 +94,7 @@ const transferMoney = async(fromAccountId , toAccountId , amount) => {
                 )
                 VALUES($1 , $2 , $3 , $4)
             `,
-            [transactionId , toAccount , "CREDIT" , amountPaise]
+            [transactionId , toAccount.id , "CREDIT" , amountPaise]
         );
 
         await client.query("COMMIT");
