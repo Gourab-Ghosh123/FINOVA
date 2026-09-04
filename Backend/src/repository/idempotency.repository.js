@@ -1,7 +1,8 @@
+
 const getKey = async(client , key) => {
     const query = `
         SELECT * FROM idempotency_keys
-        WHERE id = $1
+        WHERE key = $1
     `;
 
     const result = await client.query(
@@ -11,19 +12,21 @@ const getKey = async(client , key) => {
     return result.rows[0] || null;
 }
 
-const createKey = async(client , key) => {
+const createKey = async(client , key , requestHash) => {
     const query =`
         INSERT INTO idempotency_keys(
             key,
-            status
+            status,
+            request_hash
+
         )
-            VALUES($1 , "PENDING")
+            VALUES($1 , 'PENDING' , $2)
             RETURNING *;
     `;
 
     const result = await client.query(
         query,
-        [key]
+        [key , requestHash]
     );
 
     return result.rows[0] || null;
@@ -33,9 +36,9 @@ const markCompleted = async(client , key , response) => {
     
     const query = `
         UPDATE idempotency_keys
-        SET status = "COMPLETED",
+        SET status = 'COMPLETED',
         response = $2
-        WHERE id = $1
+        WHERE key = $1
         RETURNING *;
     `;
 
@@ -47,9 +50,9 @@ const markCompleted = async(client , key , response) => {
 const markFailed = async(client , key , response) => {
     const query = `
         UPDATE idempotency_keys
-        SET status = "FAILED",
+        SET status = 'FAILED',
         response = $2
-        WHERE id = $1
+        WHERE key = $1
         RETURNING *;
     `;
 
