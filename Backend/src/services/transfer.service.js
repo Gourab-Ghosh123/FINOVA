@@ -40,7 +40,7 @@ const transferMoney = async(fromAccountId , toAccountId , amount , idempotencyKe
                 throw new AppError(
                     "Idempotency key was already used with different request parameters",
                     409
-                )
+                );
             }
 
             if(existingKey.status == "COMPLETED") {
