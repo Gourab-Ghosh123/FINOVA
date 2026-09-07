@@ -17,6 +17,9 @@ const transferRoutes = require("./routes/transfer.routes");
 
 app.use("/api/transfer" , transferRoutes);
 
+const transactionRoutes = require("./routes/transaction.routes");
+app.use("/api/transaction" , transactionRoutes);
+
 app.use(errorHandler);
 
 const usersRoutes = require("./routes/users.routes");
