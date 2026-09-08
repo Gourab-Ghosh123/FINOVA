@@ -36,7 +36,7 @@ const transferMoney = async(fromAccountId , toAccountId , amount , idempotencyKe
 
         if(existingKey) {
             
-            if(existingKey.request_hash !== request_hash) {
+            if(existingKey.request_hash !== createHash) {
                 throw new AppError(
                     "Idempotency key was already used with different request parameters",
                     409
@@ -108,7 +108,7 @@ const transferMoney = async(fromAccountId , toAccountId , amount , idempotencyKe
             [reference , "TRANSFER" , amountPaise , "INR" , "COMPLETED"]
         ); */
 
-        const transaction = await transactionRepository.createTransaction(client , reference , amountPaise);
+        const transaction = await transactionRepository.createTransaction(client , reference , fromAccountId , toAccountId , amountPaise);
 
         const transactionId = transaction.rows[0].id;
 
@@ -180,7 +180,21 @@ const getTransaction = async(pool , transactionId) => {
     }
 }
 
+const getTransactionsByAccount = async(pool , accountId) => {
+    const client = await pool.connect();
+
+    try {
+        const transactions = await transactionRepository.getTransactionsByAccount(client , accountId);
+
+        return transactions;
+    }
+    finally {
+        client.release();
+    }
+}
+
 module.exports = {
     transferMoney,
-    getTransaction
+    getTransaction,
+    getTransactionsByAccount
 };

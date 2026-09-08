@@ -19,6 +19,7 @@ app.use("/api/transfer" , transferRoutes);
 
 const transactionRoutes = require("./routes/transaction.routes");
 app.use("/api/transaction" , transactionRoutes);
+app.use("/api/accounts" , transactionRoutes);
 
 app.use(errorHandler);
 
