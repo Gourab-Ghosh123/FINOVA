@@ -180,11 +180,13 @@ const getTransaction = async(pool , transactionId) => {
     }
 }
 
-const getTransactionsByAccount = async(pool , accountId) => {
+const getTransactionsByAccount = async(pool , accountId , page , limit , filters) => {
+
+    const offset = (page - 1) * limit;
     const client = await pool.connect();
 
     try {
-        const transactions = await transactionRepository.getTransactionsByAccount(client , accountId);
+        const transactions = await transactionRepository.getTransactionsByAccount(client , accountId , limit , offset , filters);
 
         return transactions;
     }

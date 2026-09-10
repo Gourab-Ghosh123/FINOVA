@@ -47,7 +47,7 @@ const validate = (schema) => {
         if(!result.success) {
             res.status(400).json({
                 status : false,
-                message : "Invaluid data",
+                message : "Invalid data",
                 error : result.error.issues
             });
         }
@@ -55,5 +55,19 @@ const validate = (schema) => {
         next();
     }
 }
+const validateQuery = (schema) => {
+    return (req , res , next) => {
+        const validatedQuery = schema.safeParse(req.query);
 
-module.exports = validate;
+        if(!validatedQuery) {
+            res.status(400).json({
+                status : false,
+                message : "Invalid data! Choose correct Status or Type..."
+            });
+        }
+        req.query = validatedQuery;
+        next();
+    }
+}
+
+module.exports = {validate , validateQuery};
