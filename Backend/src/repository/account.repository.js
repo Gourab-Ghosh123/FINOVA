@@ -1,9 +1,15 @@
-const pool = require("../config/database");
-
 const findAccountByUserId = async(userId) => {
     const result = await pool.query(
         "SELECT * FROM accounts where id = $1",
         [userId]
+    );
+    return result.rows[0];
+}
+
+const findAccountById = async(client , accountId) => {
+    const result = await client.query(
+        `SELECT * FROM accounts WHERE id = $1`,
+        [accountId]
     );
     return result.rows[0];
 }
@@ -25,5 +31,6 @@ const updateBalance = async(client , accountId , amountPaise) => {
 
 module.exports = {
     findAccountByUserId,
+    findAccountById,
     updateBalance
 };

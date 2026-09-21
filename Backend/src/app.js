@@ -21,6 +21,9 @@ const transactionRoutes = require("./routes/transaction.routes");
 app.use("/api/transaction" , transactionRoutes);
 app.use("/api/accounts" , transactionRoutes);
 
+const reconcilationRoutes = require("./routes/reconcilation.routes");
+app.use("/api/accounts/:accountId" , reconcilationRoutes);
+
 app.use(errorHandler);
 
 const usersRoutes = require("./routes/users.routes");

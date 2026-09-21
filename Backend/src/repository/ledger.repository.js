@@ -30,10 +30,10 @@ const getBalanceFromLedger = async(client , accountId) => {
             COALESCE(
                 SUM(
                     CASE
-                        WHEN entry_type = "CREDIT"
+                        WHEN entry_type = 'CREDIT'
                         THEN amount_paise
 
-                        WHEN entry_type = "DEBIT"
+                        WHEN entry_type = 'DEBIT'
                         THEN -amount_paise
                     END
                 ),
