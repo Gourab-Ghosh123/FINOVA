@@ -6,6 +6,7 @@ const { createLedgerEntry } = require("../repository/ledger.repository");
 const transactionRepository = require("../repository/transaction.repository");
 const idempotencyRepository = require("../repository/idempotency.repository");
 const {createRequestHash} = require("../utils/request_hash");
+const {createAuditLog} = require("../repository/audit.repository");
 
 const transferMoney = async(fromAccountId , toAccountId , amount , idempotencyKey) => {
 
@@ -139,6 +140,19 @@ const transferMoney = async(fromAccountId , toAccountId , amount , idempotencyKe
 
         await createLedgerEntry(client , transactionId , fromAccountId , "DEBIT" , amountPaise);
         await createLedgerEntry(client , transactionId , toAccountId , "CREDIT" , amountPaise);
+
+        await createAuditLog(client , {
+            userId : null,
+            action : "TRANSFER_CREATED",
+            entityType : "TRANSACTION",
+            entityId : transactionId,
+            metaData : {
+                fromAccount,
+                toAccountId,
+                amountPaise,
+                status : "SUCCESS"
+            }
+        });
 
         const response = {
             transactionId,

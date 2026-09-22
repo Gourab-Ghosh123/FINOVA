@@ -2,12 +2,14 @@ const {transferMoney} = require("../services/transfer.service");
 const createTransfer = async(req , res , next) => {
     try {
         const {fromAccountId , toAccountId , amount} = req.body;
-    const result = await transferMoney(fromAccountId , toAccountId , amount);
+        const idempotencyKey = req.headers["idempotency-key"];
 
-    return res.status(201).json({
-        success : true,
-        data : result
-    });
+        const result = await transferMoney(fromAccountId , toAccountId , amount , idempotencyKey);
+
+        return res.status(201).json({
+            success : true,
+            data : result
+        });
     }
     catch(error) {
         next(error);

@@ -1,6 +1,6 @@
 const findAccountByUserId = async(userId) => {
     const result = await pool.query(
-        "SELECT * FROM accounts where id = $1",
+        "SELECT * FROM accounts WHERE id = $1",
         [userId]
     );
     return result.rows[0];
