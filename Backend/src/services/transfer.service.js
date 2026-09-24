@@ -89,8 +89,8 @@ const transferMoney = async(fromAccountId , toAccountId , amount , idempotencyKe
             [amountPaise , toAccount.id]
         );*/
 
-        await accountRepository.updateBalance(client , fromAccount , -amountPaise);
-        await accountRepository.updateBalance(client , toAccount , amountPaise);
+        await accountRepository.updateBalance(client , fromAccount.id , -amountPaise);
+        await accountRepository.updateBalance(client , toAccount.id , amountPaise);
 
         const reference = `TXN_${Date.now()}_${Math.random().toString(36).slice(2 , 8)}`;
 
@@ -111,7 +111,7 @@ const transferMoney = async(fromAccountId , toAccountId , amount , idempotencyKe
 
         const transaction = await transactionRepository.createTransaction(client , reference , fromAccountId , toAccountId , amountPaise);
 
-        const transactionId = transaction.rows[0].id;
+        const transactionId = transaction.id;
 
         /* await client.query(
             `

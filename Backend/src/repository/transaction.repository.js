@@ -4,13 +4,14 @@ const createTransaction = async(client , reference , fromAccountId , toAccountId
         INSERT INTO transactions(
             reference,
             type,
-            fromAccountId,
-            fromAccountId
+            from_account_id,
+            to_account_id,
             amount_paise,
             currency,
             status
         )
             VALUES($1 , $2 , $3 , $4 , $5 , $6 , $7)
+            RETURNING *;
     `;
     
     const result = await client.query(
