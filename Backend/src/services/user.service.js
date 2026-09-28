@@ -1,4 +1,5 @@
-const {findUserById} = require("../repository/user.repository");
+const {findUserById , createUserRepository} = require("../repository/user.repository");
+const {hashPassword} = require( "../utils/password");
 
 const getUserById = async(userId) => {
 
@@ -9,7 +10,13 @@ const getUserById = async(userId) => {
     }
     return user;
 }
+const createUserService = async(name , email , password) {
+    const hasedPassword = await hashPassword(password);
+    const user = await createUserRepository(name , email , hasedPassword);
+    return user;
+}
 
 module.exports = {
-    getUserById
+    getUserById,
+    createUserService
 };
