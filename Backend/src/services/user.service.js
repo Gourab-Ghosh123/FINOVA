@@ -10,7 +10,7 @@ const getUserById = async(userId) => {
     }
     return user;
 }
-const createUserService = async(name , email , password) {
+const createUserService = async(name , email , password) => {
     const hasedPassword = await hashPassword(password);
     const user = await createUserRepository(name , email , hasedPassword);
     return user;
