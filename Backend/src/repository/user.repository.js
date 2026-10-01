@@ -10,6 +10,14 @@ const findUserById = async(userId) => {
     return result.rows[0];
 };
 
+const findUserByEmail = async(email) => {
+    const query = `SELECT * FROM users
+        WHERE email = $1
+    `;
+    const result = await pool.query(query , [email]);
+    return result.rows[0];
+}
+
 const createUserRepository = async(name , email , hashedPassword) => {
     const query = `INSERT INTO users(
         name,
@@ -26,5 +34,6 @@ const createUserRepository = async(name , email , hashedPassword) => {
 
 module.exports = {
     findUserById,
-    createUserRepository
+    createUserRepository,
+    findUserByEmail
 };

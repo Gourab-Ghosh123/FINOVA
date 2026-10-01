@@ -1,6 +1,7 @@
-const {findUserById , createUserRepository} = require("../repository/user.repository");
-const {hashPassword} = require( "../utils/password");
+const {findUserById , findUserByEmail , createUserRepository} = require("../repository/user.repository");
+const {hashPassword , comparePassword} = require( "../utils/password");
 const appError = require("../errors/AppError");
+const { email } = require("zod");
 
 const getUserById = async(userId) => {
 
@@ -26,7 +27,23 @@ const createUserService = async(name , email , password) => {
     
 }
 
+const loginUser = async(email , password) => {
+    const user = await findUserByEmail(email);
+    if(!user) {
+        throw new appError("Invaid email or password" , 401);
+    }
+
+    const passwordMatches = await comparePassword(password , user.password_hash);
+
+    if(!passwordMatches) {
+        throw new appError("Invalid email or password" , 401);
+    }
+
+    return user;
+}
+
 module.exports = {
     getUserById,
-    createUserService
+    createUserService,
+    loginUser
 };
