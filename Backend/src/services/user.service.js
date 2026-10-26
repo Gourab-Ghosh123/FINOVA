@@ -1,3 +1,4 @@
+const {createToken} = require("../utils/jwt");
 const {findUserById , findUserByEmail , createUserRepository} = require("../repository/user.repository");
 const {hashPassword , comparePassword} = require( "../utils/password");
 const appError = require("../errors/AppError");
@@ -39,7 +40,9 @@ const loginUser = async(email , password) => {
         throw new appError("Invalid email or password" , 401);
     }
 
-    return user;
+    const token = createToken(user.id);
+
+    return {user , token};
 }
 
 module.exports = {

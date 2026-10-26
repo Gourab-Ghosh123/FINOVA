@@ -31,14 +31,18 @@ const createUserControllers = async(req , res) => {
 const loginUserController = async(req , res) => {
 
     const {email , password} = req.body;
-    const user = await loginUser(email , password);
+    const result = await loginUser(email , password);
+    const {user , token} = result;
 
     return res.status(200).json({
         success : true,
         data : {
-            id : user.id,
-            name : user.name,
-            email : user.email
+            user : {
+                id : user.id,
+                name : user.name,
+                email : user.email
+            },
+            token : token
         }
     });
 };
