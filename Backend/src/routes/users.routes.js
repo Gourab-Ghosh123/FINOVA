@@ -1,3 +1,4 @@
+const {authenticate} = require("../middleware/auth");
 const express = require("express");
 const router = express.Router();
 const {createUserSchema , loginUserSchema} = require("../validators/user.validator");
@@ -5,7 +6,7 @@ const {validate} = require("../middleware/transfer.validation");
 
 const {getUser , createUserControllers , loginUserController} = require("../controllers/users.controllers");
 
-router.get("/:id" , getUser);
+router.get("/:id" , authenticate , getUser);
 
 router.post("/" , validate(createUserSchema) , createUserControllers);
 

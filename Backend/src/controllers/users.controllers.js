@@ -3,6 +3,13 @@ const {getUserById , createUserService , loginUser } = require("../services/user
 
 const getUser = async (req , res) => {
     const userId = req.params.id;
+
+    if(String(req.user.id) !== String(userId)) {
+        return res.status(403).json({
+            status : "error",
+            message : "You cannot access another user's profile"
+        });
+    }
     const user = await getUserById(userId);
 
     if(!user) {
