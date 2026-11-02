@@ -14,9 +14,9 @@ const getUserById = async(userId) => {
     return user;
 }
 const createUserService = async(name , email , password) => {
-    const hasedPassword = await hashPassword(password);
+    const hashedPassword = await hashPassword(password);
     try {
-        const user = await createUserRepository(name , email , hasedPassword);
+        const user = await createUserRepository(name , email , hashedPassword);
         return user;
     }
     catch(error) {

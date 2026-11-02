@@ -19,12 +19,16 @@ app.use("/api/transfer" , transferRoutes);
 
 const transactionRoutes = require("./routes/transaction.routes");
 app.use("/api/transaction" , transactionRoutes);
-app.use("/api/accounts" , transactionRoutes);
+app.use("/api/accounts/:accountId" , transactionRoutes);
+
+
+const accountRoutes = require("./routes/account.routes");
+app.use("/api/accounts" , accountRoutes);
 
 const reconcilationRoutes = require("./routes/reconcilation.routes");
 app.use("/api/accounts/:accountId" , reconcilationRoutes);
 
-app.use(errorHandler);
+
 
 const usersRoutes = require("./routes/users.routes");
 app.use("/api/users" , usersRoutes);
@@ -32,5 +36,7 @@ app.use("/api/users" , usersRoutes);
 app.get("/" , (req , res) => {
     res.send("welcome to our home page");
 });
+
+app.use(errorHandler);
 
 module.exports = app;

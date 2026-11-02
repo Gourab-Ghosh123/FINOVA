@@ -6,6 +6,6 @@ const {validateQuery} = require("../middleware/transfer.validation");
 const router = express.Router();
 
 router.get("/:id" , TransactionController.getTransactionController);
-router.get("/:accountId/transactions" , validateQuery(filterSchema) , TransactionController.getTransactionByAccountController);
+router.get("/transactions" , validateQuery(filterSchema) , TransactionController.getTransactionByAccountController);
 
 module.exports = router;

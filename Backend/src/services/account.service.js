@@ -1,4 +1,4 @@
-const {findAccountByUserId} = require("../repository/acount.repository");
+const {findAccountByUserId} = require("../repository/account.repository");
 
 const getAccountByUserId = async(userId) => {
     const account = await findAccountByUserId(userId);
