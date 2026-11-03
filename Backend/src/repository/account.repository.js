@@ -41,7 +41,7 @@ const createAccountRepository = async(client , userId) => {
 
     const result = await client.query(query , [userId , 0]);
 
-    return result.rows[0];
+    return result.rows[0] || null;
 }
 
 module.exports = {
