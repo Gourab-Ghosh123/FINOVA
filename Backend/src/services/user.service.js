@@ -2,7 +2,9 @@ const {createToken} = require("../utils/jwt");
 const {findUserById , findUserByEmail , createUserRepository} = require("../repository/user.repository");
 const {hashPassword , comparePassword} = require( "../utils/password");
 const appError = require("../errors/AppError");
-const { email } = require("zod");
+const pool = require("../config/database");
+const {createAccountRepository} = require("../repository/account.repository");
+//const { email } = require("zod");
 
 const getUserById = async(userId) => {
 
@@ -15,15 +17,45 @@ const getUserById = async(userId) => {
 }
 const createUserService = async(name , email , password) => {
     const hashedPassword = await hashPassword(password);
+
+    let client;
+    let transactionStarted = false;
+    
     try {
-        const user = await createUserRepository(name , email , hashedPassword);
+        client = await pool.connect();
+
+        await client.query("BEGIN");
+        transactionStarted = true;
+
+        const user = await createUserRepository(client , name , email , hashedPassword);
+
+        const account = await createAccountRepository(client , user.id);
+
+        await client.query("COMMIT");
+        transactionStarted = false;
+
         return user;
     }
     catch(error) {
-        if(error.code === "23505" && error.constraint === "users_email_key") {
-            throw new appError("Email already Registered!" , 409);
+        if(client && transactionStarted) {
+            try {
+                await client.query("ROLLBACK");
+            }
+            catch(rollbackError) {
+                console.error("Transaction rollback failed" , rollbackError);
+            }
         }
+
+        if(error.code === "23505" && error.constraint === "users_email_key") {
+            throw new appError("Email already registered" , 409);
+        }
+        
         throw error;
+    }
+    finally {
+        if(client) {
+            client.release();
+        }
     }
     
 }
