@@ -16,7 +16,13 @@ const getMyAccount = async(req , res , next) => {
 
     return res.status(200).json({
         status : "success",
-        data : account
+        data : {
+            id : account.id,
+            balance_paise : account.balance_paise,
+            currency : account.currency,
+            status : account.status,
+            created_at : account.created_at
+        }
     });
     }
     catch(error) {
