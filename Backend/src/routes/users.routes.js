@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const {createUserSchema , loginUserSchema} = require("../validators/user.validator");
 const {validate} = require("../middleware/transfer.validation");
+const {loginLimiter} = require("../middleware/rateLimiter.middleware");
 
 const {getUser , createUserControllers , loginUserController} = require("../controllers/users.controllers");
 
@@ -10,6 +11,6 @@ router.get("/:id" , authenticate , getUser);
 
 router.post("/" , validate(createUserSchema) , createUserControllers);
 
-router.post("/login" , validate(loginUserSchema) , loginUserController);
+router.post("/login" , loginLimiter , validate(loginUserSchema) , loginUserController);
 
 module.exports = router;
