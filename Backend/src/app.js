@@ -1,5 +1,13 @@
 const express = require("express");
+const cors = require("cors");
+
 const app = express();
+
+app.use(cors({
+    origin : "http://localhost:5173",
+    methods : ["GET" , "POST" , "PUT" , "DELETE"],
+    allowedHeaders : ["Content-Type" , "Authorization"]
+}));
 
 const logger = require("./middleware/logger.middleware");
 
