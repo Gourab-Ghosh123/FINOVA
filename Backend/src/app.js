@@ -1,7 +1,10 @@
 const express = require("express");
 const cors = require("cors");
+const helmet =  require("helmet");
 
 const app = express();
+
+app.use(helmet());
 
 app.use(cors({
     origin : "http://localhost:5173",
@@ -14,7 +17,9 @@ const logger = require("./middleware/logger.middleware");
 app.use(logger);
 const errorHandler = require("./middleware/error.middleware");
 
-app.use(express.json());
+app.use(express.json({
+    limit : "1mb"
+}));
 
 
 const healthRoutes = require("./routes/health.routes");
