@@ -46,6 +46,10 @@ app.use("/api/accounts/:accountId" , reconcilationRoutes);
 const usersRoutes = require("./routes/users.routes");
 app.use("/api/users" , usersRoutes);
 
+const paymentRoutes = require("./routes/payment.routes");
+app.use("/api/payment" , paymentRoutes);
+
+
 app.get("/" , (req , res) => {
     res.send("welcome to our home page");
 });
