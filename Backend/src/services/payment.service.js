@@ -12,7 +12,7 @@ const {
     updatePaymentOrderGatewayDetails
 } = require("../repository/payment.repository");
 
-const AppError = require("../utils/appError");
+const {AppError} = require("../errors/AppError");
 
 
 const createPaymentOrderService = async (userId, accountId, amountPaise) => {

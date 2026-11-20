@@ -16,7 +16,7 @@ const findAccountById = async(client , accountId) => {
     return result.rows[0];
 }
 
-const findAccountByIdAndUserId = async(client , accountID , userId) => {
+const findAccountByIdAndUserId = async(client , accountId , userId) => {
     const result = await client.query(
         `
             SELECT * FROM accounts
