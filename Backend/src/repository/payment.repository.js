@@ -46,11 +46,114 @@ const markPaymentOrderFailed = async(client , orderId , failureReason) => {
         ` , ["FAILED " , failureReason , orderId]);
     
         return result.rows[0] || null;
-}
+};
+
+const findPaymentOrderByGatewayOrderIdAndUserId = async (
+    client,
+    gatewayOrderId,
+    userId
+) => {
+
+    const result = await client.query(
+        `
+            SELECT *
+            FROM payment_orders
+            WHERE gateway_order_id = $1
+            AND user_id = $2
+        `,
+        [gatewayOrderId, userId]
+    );
+
+    return result.rows[0] || null;
+};
+
+const createPaymentAttempt = async (
+    client,
+    {
+        paymentOrderId,
+        gatewayPaymentId,
+        amountPaise,
+        status,
+        method
+    }
+) => {
+    const result = await client.query(
+        `
+            INSERT INTO payment_attempts (
+                payment_order_id,
+                gateway_payment_id,
+                amount_paise,
+                status,
+                method
+            )
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+        `,
+        [
+            paymentOrderId,
+            gatewayPaymentId,
+            amountPaise,
+            status,
+            method
+        ]
+    );
+
+    return result.rows[0];
+};
+
+const findPaymentAttemptByGatewayPaymentId = async (
+    client,
+    gatewayPaymentId
+) => {
+    const result = await client.query(
+        `
+            SELECT *
+            FROM payment_attempts
+            WHERE gateway_payment_id = $1
+        `,
+        [gatewayPaymentId]
+    );
+
+    return result.rows[0] || null;
+};
+
+const updatePaymentAttempt = async (
+    client,
+    gatewayPaymentId,
+    {
+        status,
+        method,
+        failureReason
+    }
+) => {
+    const result = await client.query(
+        `
+            UPDATE payment_attempts
+            SET status = $1,
+                method = $2,
+                failure_reason = $3,
+                updated_at = NOW()
+            WHERE gateway_payment_id = $4
+            RETURNING *
+        `,
+        [
+            status,
+            method,
+            failureReason,
+            gatewayPaymentId
+        ]
+    );
+
+    return result.rows[0] || null;
+};
 
 module.exports = {
     createPaymentOrder , 
     findPaymentOrderByGatewayOrderId,
     updatePaymentOrderGatewayDetails,
-    markPaymentOrderFailed
+    markPaymentOrderFailed,
+    findPaymentOrderByGatewayOrderIdAndUserId,
+    createPaymentAttempt,
+    findPaymentAttemptByGatewayPaymentId,
+    updatePaymentAttempt
 };

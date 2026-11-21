@@ -9,10 +9,13 @@ const {
 
 const {
     createPaymentOrder,
-    updatePaymentOrderGatewayDetails
+    updatePaymentOrderGatewayDetails,
+    findPaymentOrderByGatewayOrderIdAndUserId,
 } = require("../repository/payment.repository");
 
 const {AppError} = require("../errors/AppError");
+
+const {verifyRazorPaySignature} = require("../utils/razorpaySignature");
 
 
 const createPaymentOrderService = async (userId, accountId, amountPaise) => {
@@ -137,7 +140,82 @@ const createPaymentOrderService = async (userId, accountId, amountPaise) => {
 
 };
 
+const verifyPayment = async (
+    userId,
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature
+) => {
+
+    // Step 1: Find the payment order belonging to this user
+    const client = await pool.connect();
+
+    let paymentOrder;
+
+    try {
+        paymentOrder = await findPaymentOrderByGatewayOrderIdAndUserId(
+            client,
+            razorpay_order_id,
+            userId
+        );
+    } finally {
+        client.release();
+    }
+
+    if (!paymentOrder) {
+        throw new AppError("Payment order not found", 404);
+    }
+
+    // Step 2: Verify Razorpay signature
+    const isValidSignature = verifyRazorpaySignature(
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature
+    );
+
+    if (!isValidSignature) {
+        throw new AppError("Invalid payment signature", 400);
+    }
+
+    // Step 3: Fetch actual payment details from Razorpay
+    let razorpayPayment;
+
+    try {
+        razorpayPayment = await razorpay.payments.fetch(
+            razorpay_payment_id
+        );
+    } catch (error) {
+        throw new AppError("Unable to verify payment with Razorpay", 502);
+    }
+
+    // Step 4: Validate payment details
+    if (
+        razorpayPayment.order_id !== razorpay_order_id ||
+        razorpayPayment.amount !== Number(paymentOrder.amount_paise) ||
+        razorpayPayment.currency !== paymentOrder.currency
+    ) {
+        throw new AppError("Payment details do not match our order", 400);
+    }
+
+    // Step 5: Check whether payment is captured
+    if (razorpayPayment.status !== "captured") {
+        throw new AppError(
+            `Payment is not captured. Current status: ${razorpayPayment.status}`,
+            400
+        );
+    }
+
+    return {
+        message: "Payment verified successfully",
+        orderId: paymentOrder.order_id,
+        paymentId: razorpay_payment_id,
+        amountPaise: paymentOrder.amount_paise,
+        status: razorpayPayment.status
+    };
+};
+
 
 module.exports = {
-    createPaymentOrderService
+    createPaymentOrderService,
+    verifyPayment
 };
