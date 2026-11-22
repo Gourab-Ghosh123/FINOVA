@@ -4,18 +4,30 @@ const { randomUUID } = require("crypto");
 const razorpay = require("../config/razorpay");
 
 const {
-    findAccountByIdAndUserId
+    findAccountByIdAndUserId,
+    updateBalance
 } = require("../repository/account.repository");
+
+const {createDepositTransaction} = require("../repository/transaction.repository");
+
+const {createLedgerEntry} = require("../repository/ledger.repository");
 
 const {
     createPaymentOrder,
     updatePaymentOrderGatewayDetails,
     findPaymentOrderByGatewayOrderIdAndUserId,
+    createPaymentAttempt,
+    findPaymentAttemptByGatewayPaymentId,
+    updatePaymentAttempt,
+    markPaymentOrderSuccess,
+    findPaymentOrderForUpdate
 } = require("../repository/payment.repository");
 
 const {AppError} = require("../errors/AppError");
 
 const {verifyRazorPaySignature} = require("../utils/razorpaySignature");
+
+const {getAccountForUpdate} = require("../repository/transfer.repository");
 
 
 const createPaymentOrderService = async (userId, accountId, amountPaise) => {

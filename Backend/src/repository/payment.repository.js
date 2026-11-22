@@ -147,13 +147,51 @@ const updatePaymentAttempt = async (
     return result.rows[0] || null;
 };
 
+const markPaymentOrderSuccess = async (client, orderId, paymentId) => {
+    const result = await client.query(
+        `
+            UPDATE payment_orders
+            SET status = $1,
+                gateway_payment_id = $2,
+                updated_at = NOW()
+            WHERE order_id = $3
+            RETURNING *
+        `,
+        ["SUCCESS", paymentId, orderId]
+    );
+
+    return result.rows[0] || null;
+};
+
+
+const findPaymentOrderForUpdate = async (
+    client,
+    gatewayOrderId,
+    userId
+) => {
+    const result = await client.query(
+        `
+            SELECT *
+            FROM payment_orders
+            WHERE gateway_order_id = $1
+            AND user_id = $2
+            FOR UPDATE;
+        `,
+        [gatewayOrderId, userId]
+    );
+
+    return result.rows[0] || null;
+};
+
 module.exports = {
     createPaymentOrder , 
     findPaymentOrderByGatewayOrderId,
     updatePaymentOrderGatewayDetails,
+    markPaymentOrderSuccess,
     markPaymentOrderFailed,
     findPaymentOrderByGatewayOrderIdAndUserId,
     createPaymentAttempt,
     findPaymentAttemptByGatewayPaymentId,
-    updatePaymentAttempt
+    updatePaymentAttempt,
+    findPaymentOrderForUpdate
 };

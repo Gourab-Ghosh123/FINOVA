@@ -40,7 +40,7 @@ const updateBalance = async(client , accountId , amountPaise) => {
 
     const result = await client.query(
         query,
-        [accountId , amountPaise]
+        [amountPaise , accountId]
     );
 
     return result.rows[0] || null;

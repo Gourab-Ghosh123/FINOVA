@@ -1,4 +1,4 @@
-getAccountForUpdate = async(client , accountId) => {
+const getAccountForUpdate = async(client , accountId) => {
     const result = await client.query(
         `SELECT * FROM accounts 
         WHERE id = $1
@@ -24,5 +24,6 @@ const lockAccountInOrder = async(client , fromAccountId , toAccountId) => {
 }
 
 module.exports = {
+    getAccountForUpdate,
     lockAccountInOrder
 };

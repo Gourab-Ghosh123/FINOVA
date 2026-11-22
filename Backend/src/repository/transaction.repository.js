@@ -75,8 +75,45 @@ const getTransactionsByAccount = async(client , AccountId , limit , offset , fil
 }
 
 
+const createDepositTransaction = async (
+    client,
+    reference,
+    accountId,
+    amountPaise
+) => {
+    const query = `
+        INSERT INTO transactions (
+            reference,
+            type,
+            from_account_id,
+            to_account_id,
+            amount_paise,
+            currency,
+            status
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *;
+    `;
+
+    const result = await client.query(
+        query,
+        [
+            reference,
+            "DEPOSIT",
+            null,
+            accountId,
+            amountPaise,
+            "INR",
+            "SUCCESS"
+        ]
+    );
+
+    return result.rows[0];
+};
+
 module.exports = {
     createTransaction,
     getTransactionById,
-    getTransactionsByAccount
+    getTransactionsByAccount,
+    createDepositTransaction
 };
