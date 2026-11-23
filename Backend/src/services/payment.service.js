@@ -217,13 +217,151 @@ const verifyPayment = async (
         );
     }
 
+    // Step 6: Start an atomic database transaction
+const dbClient = await pool.connect();
+
+try {
+    await dbClient.query("BEGIN");
+
+    // Lock the payment order to prevent duplicate processing
+    const lockedPaymentOrder = await findPaymentOrderForUpdate(
+        dbClient,
+        razorpay_order_id,
+        userId
+    );
+
+    if (!lockedPaymentOrder) {
+        throw new AppError("Payment order not found", 404);
+    }
+
+    // If already successful, never credit the wallet again
+    if (lockedPaymentOrder.status === "SUCCESS") {
+        await dbClient.query("COMMIT");
+
+        return {
+            message: "Payment was already processed",
+            orderId: lockedPaymentOrder.order_id,
+            paymentId: lockedPaymentOrder.gateway_payment_id,
+            status: "SUCCESS",
+            alreadyProcessed: true
+        };
+    }
+
+    if (lockedPaymentOrder.status !== "PENDING") {
+        throw new AppError("Payment order cannot be processed", 409);
+    }
+
+    // Lock the user's wallet account
+    const account = await getAccountForUpdate(
+        dbClient,
+        lockedPaymentOrder.account_id
+    );
+
+    if (!account) {
+        throw new AppError("Wallet account not found", 404);
+    }
+
+    // Check whether this Razorpay payment attempt already exists
+    const existingAttempt = await findPaymentAttemptByGatewayPaymentId(
+        dbClient,
+        razorpay_payment_id
+    );
+
+    if (existingAttempt) {
+        if (
+            String(existingAttempt.payment_order_id) !==
+            String(lockedPaymentOrder.id)
+        ) {
+            throw new AppError("Payment attempt belongs to another order", 409);
+        }
+
+        if (existingAttempt.status === "CAPTURED") {
+    throw new AppError(
+        "Payment attempt is already captured but payment order is still pending. Manual reconciliation required.",
+        409
+    );
+}
+
+await updatePaymentAttempt(
+    dbClient,
+    razorpay_payment_id,
+    {
+        status: "CAPTURED",
+        method: razorpayPayment.method,
+        failureReason: null
+    }
+);
+    } else {
+        await createPaymentAttempt(dbClient, {
+            paymentOrderId: lockedPaymentOrder.id,
+            gatewayPaymentId: razorpay_payment_id,
+            amountPaise: lockedPaymentOrder.amount_paise,
+            status: "CAPTURED",
+            method: razorpayPayment.method
+        });
+    }
+
+    // Credit the wallet
+    const updatedAccount = await updateBalance(
+        dbClient,
+        lockedPaymentOrder.account_id,
+        lockedPaymentOrder.amount_paise
+    );
+
+    if (!updatedAccount) {
+        throw new AppError("Unable to credit wallet", 500);
+    }
+
+    // Create a deposit transaction
+    const transaction = await createDepositTransaction(
+        dbClient,
+        `PAY_${lockedPaymentOrder.order_id}`,
+        lockedPaymentOrder.account_id,
+        lockedPaymentOrder.amount_paise
+    );
+
+    // Create the corresponding CREDIT ledger entry
+    await createLedgerEntry(
+        dbClient,
+        transaction.id,
+        lockedPaymentOrder.account_id,
+        "CREDIT",
+        lockedPaymentOrder.amount_paise
+    );
+
+    // Mark the payment order as successful
+    const successfulPaymentOrder = await markPaymentOrderSuccess(
+    dbClient,
+    lockedPaymentOrder.order_id,
+    razorpay_payment_id
+);
+
+if (!successfulPaymentOrder) {
+    throw new AppError(
+        "Unable to mark payment order as successful",
+        409
+    );
+}
+
+    // Save all changes together
+    await dbClient.query("COMMIT");
+
     return {
-        message: "Payment verified successfully",
-        orderId: paymentOrder.order_id,
+        message: "Payment verified and wallet credited successfully",
+        orderId: lockedPaymentOrder.order_id,
         paymentId: razorpay_payment_id,
-        amountPaise: paymentOrder.amount_paise,
-        status: razorpayPayment.status
+        amountPaise: lockedPaymentOrder.amount_paise,
+        status: "SUCCESS",
+        alreadyProcessed: false
     };
+
+} catch (error) {
+    await dbClient.query("ROLLBACK");
+    throw error;
+
+} finally {
+    dbClient.release();
+}
 };
 
 

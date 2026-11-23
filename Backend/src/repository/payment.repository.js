@@ -155,6 +155,7 @@ const markPaymentOrderSuccess = async (client, orderId, paymentId) => {
                 gateway_payment_id = $2,
                 updated_at = NOW()
             WHERE order_id = $3
+            AND status = 'PENDING'
             RETURNING *
         `,
         ["SUCCESS", paymentId, orderId]
