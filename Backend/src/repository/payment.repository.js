@@ -184,6 +184,24 @@ const findPaymentOrderForUpdate = async (
     return result.rows[0] || null;
 };
 
+const findCapturedAttemptByPaymentOrderId = async (
+    client,
+    paymentOrderId
+) => {
+    const result = await client.query(
+        `
+            SELECT *
+            FROM payment_attempts
+            WHERE payment_order_id = $1
+            AND status = 'CAPTURED'
+            LIMIT 1
+        `,
+        [paymentOrderId]
+    );
+
+    return result.rows[0] || null;
+};
+
 module.exports = {
     createPaymentOrder , 
     findPaymentOrderByGatewayOrderId,
@@ -194,5 +212,6 @@ module.exports = {
     createPaymentAttempt,
     findPaymentAttemptByGatewayPaymentId,
     updatePaymentAttempt,
-    findPaymentOrderForUpdate
+    findPaymentOrderForUpdate,
+    findCapturedAttemptByPaymentOrderId
 };
