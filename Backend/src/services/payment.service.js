@@ -12,6 +12,7 @@ const {createDepositTransaction} = require("../repository/transaction.repository
 
 const {createLedgerEntry} = require("../repository/ledger.repository");
 
+
 const {
     createPaymentOrder,
     updatePaymentOrderGatewayDetails,
@@ -20,15 +21,14 @@ const {
     findPaymentAttemptByGatewayPaymentId,
     updatePaymentAttempt,
     markPaymentOrderSuccess,
-    findPaymentOrderForUpdate,
+    findPaymentOrderForUpdate ,
     findCapturedAttemptByPaymentOrderId
 } = require("../repository/payment.repository");
 
 const {AppError} = require("../errors/AppError");
-
-const {verifyRazorPaySignature} = require("../utils/razorpaySignature");
-
+const {verifyRazorpaySignature} = require("../utils/razorpaySignature");
 const {getAccountForUpdate} = require("../repository/transfer.repository");
+
 
 
 const createPaymentOrderService = async (userId, accountId, amountPaise) => {
@@ -218,11 +218,9 @@ const verifyPayment = async (
         );
     }
 
-    // Step 6: Start an atomic database transaction
+  // Step 6: Start an atomic database transaction
 const dbClient = await pool.connect();
-
-let transactionStarted = false;
-
+    let transactionStarted = false;
 try {
     await dbClient.query("BEGIN");
     transactionStarted = true;
@@ -265,7 +263,7 @@ if (
     }
 
     await dbClient.query("COMMIT");
-    transactionStarted = false;
+     transactionStarted = false;
 
     return {
         message: "Payment was already processed",
@@ -320,7 +318,7 @@ if (
             throw new AppError("Payment attempt belongs to another order", 409);
         }
 
-        if (existingAttempt.status === "CAPTURED") {
+       if (existingAttempt.status === "CAPTURED") {
     throw new AppError(
         "Payment attempt is already captured but payment order is still pending. Manual reconciliation required.",
         409
@@ -343,7 +341,8 @@ if (!updatedAttempt) {
         500
     );
 }
-    }  else {
+    } 
+ else {
 
     const capturedAttempt = await findCapturedAttemptByPaymentOrderId(
         dbClient,
@@ -426,7 +425,7 @@ if (!ledgerEntry) {
 }
 
     // Mark the payment order as successful
-    const successfulPaymentOrder = await markPaymentOrderSuccess(
+  const successfulPaymentOrder = await markPaymentOrderSuccess(
     dbClient,
     lockedPaymentOrder.order_id,
     razorpay_payment_id
@@ -438,11 +437,9 @@ if (!successfulPaymentOrder) {
         409
     );
 }
-
     // Save all changes together
     await dbClient.query("COMMIT");
-    transactionStarted = false;
-
+     transactionStarted = false;
     return {
         message: "Payment verified and wallet credited successfully",
         orderId: lockedPaymentOrder.order_id,
@@ -466,9 +463,10 @@ if (!successfulPaymentOrder) {
 
 } finally {
     dbClient.release();
-};
-}
 
+};
+
+}
 module.exports = {
     createPaymentOrderService,
     verifyPayment

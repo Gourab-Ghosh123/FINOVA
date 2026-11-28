@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FinCore Razorpay Test</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <h2>FinCore - Razorpay Test Payment</h2>
+
+    <p>Amount: ₹500</p>
+
+    <button id="payButton">Pay ₹500</button>
+
+    <h3>Payment Response</h3>
+    <pre id="result">Waiting for payment...</pre>
+
+    <script>
+        const options = {
+            key: "rzp_test_Ty145O1buOBPvk",
+
+            amount: 50000,
+            currency: "INR",
+
+            name: "FinCore",
+            description: "Wallet Deposit",
+
+            order_id: "order_U5VzwKwVQDqLMI",
+
+            handler: function (response) {
+                document.getElementById("result").textContent =
+                    JSON.stringify(response, null, 4);
+            },
+
+            theme: {
+                color: "#3399cc"
+            }
+        };
+
+        const checkout = new Razorpay(options);
+
+        document.getElementById("payButton").onclick = function () {
+            checkout.open();
+        };
+    </script>
+</body>
+</html>
